@@ -17,7 +17,7 @@ db = MySQLdb.connect(
     host="127.0.0.1",
     user="root",
     password="",  # your mysql password
-    database="datawise_ai",
+    database="ott_platform",
     charset="utf8mb4"
 )
 # Cursor configured to return results as dictionaries (DictCursor)
