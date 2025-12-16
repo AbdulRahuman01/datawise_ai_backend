@@ -14,6 +14,8 @@ from dotenv import load_dotenv # type: ignore
 load_dotenv()
 print("PRINT TEST:", os.getenv("GROQ_API_KEY"))
 from pathlib import Path
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,16 +85,24 @@ WSGI_APPLICATION = 'ai_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'datawise_ai',
+#         'USER': 'root',
+#         'PASSWORD': '',      # add your password
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'datawise_ai',
-        'USER': 'root',
-        'PASSWORD': '',      # add your password
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
+
 
 
 # Password validation
