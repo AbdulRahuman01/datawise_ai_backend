@@ -14,36 +14,28 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 FORBIDDEN = ["delete", "drop", "update", "insert", "alter", "truncate"]
 
 
+
 def get_schema():
     """
-    Fetch database schema (tables + columns) in a PostgreSQL-safe way
-    using Django's database connection.
+    Database-agnostic schema fetch using Django introspection.
+    Works with SQLite, PostgreSQL, MySQL.
     """
     schema = ""
 
     with connection.cursor() as cursor:
-        # Get all tables from public schema
-        cursor.execute("""
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-        """)
-        tables = cursor.fetchall()
+        table_names = connection.introspection.table_names()
 
-        for (table_name,) in tables:
-            cursor.execute("""
-                SELECT column_name, data_type
-                FROM information_schema.columns
-                WHERE table_name = %s
-            """, [table_name])
+        for table in table_names:
+            columns = connection.introspection.get_table_description(cursor, table)
 
-            columns = cursor.fetchall()
             col_str = ", ".join(
-                [f"{col} {dtype}" for col, dtype in columns]
+                [f"{col.name} {col.type_code}" for col in columns]
             )
-            schema += f"{table_name}({col_str})\n"
+
+            schema += f"{table}({col_str})\n"
 
     return schema
+
 
 
 def clean_sql(sql: str) -> str:
