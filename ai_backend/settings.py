@@ -30,7 +30,12 @@ SECRET_KEY = 'django-insecure-a0f)f*j6z_jw+16=r+^3s2hu0yn6bz#z1-247%$_m$3ag1ob+e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "datawiseaibackend-production-6a6f.up.railway.app",
+    ".up.railway.app",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
