@@ -13,7 +13,15 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # Forbidden SQL keywords (read-only safety)
 FORBIDDEN = ["delete", "drop", "update", "insert", "alter", "truncate"]
 
+DEMO_KEYWORDS = [
+    "movie", "movies", "rating", "genre",
+    "subscription", "plan", "revenue",
+    "user", "users"
+]
 
+def is_demo_question(question: str) -> bool:
+    q = question.lower()
+    return any(word in q for word in DEMO_KEYWORDS)
 
 def get_schema():
     """
@@ -50,6 +58,10 @@ def ask_ai(request):
 
     if not question:
         return Response({"error": "Question is required bro 😭"})
+
+    # 🔍 Check if demo-related question
+    lowered_question = question.lower()
+    is_demo = any(word in lowered_question for word in DEMO_KEYWORDS)
 
     # 1️⃣ Get DB schema
     schema = get_schema()
@@ -93,13 +105,20 @@ def ask_ai(request):
                 "sql": generated_sql,
             })
 
-    # 4️⃣ Execute SQL safely
+    # 🔹 NON-DEMO → SQL ONLY RESPONSE
+    if not is_demo:
+        return Response({
+            "mode": "sql_only",
+            "sql": generated_sql,
+        })
+
+    # 4️⃣ Execute SQL safely (DEMO ONLY)
     try:
         with connection.cursor() as cursor:
             cursor.execute(generated_sql)
             result = cursor.fetchall()
 
-        # 5️⃣ Ask Groq to explain result
+        # 5️⃣ Ask Groq to explain result (DEMO ONLY)
         explain_prompt = [
             {
                 "role": "system",
@@ -128,8 +147,9 @@ def ask_ai(request):
             "sql": generated_sql,
         })
 
-    # 6️⃣ Final response
+    # 6️⃣ Final DEMO response
     return Response({
+        "mode": "demo",
         "message": "SQL executed successfully bro! 🚀",
         "sql": generated_sql,
         "result": result,
