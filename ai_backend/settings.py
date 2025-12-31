@@ -32,6 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "datawiseaibackend-production-6a6f.up.railway.app",
+    "https://datawise-ai-backend.onrender.com",
     ".up.railway.app",
     "localhost",
     "127.0.0.1",
@@ -105,12 +106,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     # Production (Railway - PostgreSQL)
     DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
+    "default": dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600
+    )
+}
 else:
     # Local development (SQLite)
     DATABASES = {
