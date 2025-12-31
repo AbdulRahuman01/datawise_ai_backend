@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "datawiseaibackend-production-6a6f.up.railway.app",
-    "https://datawise-ai-backend.onrender.com",
+    "datawise-ai-backend.onrender.com",
     ".up.railway.app",
     "localhost",
     "127.0.0.1",
