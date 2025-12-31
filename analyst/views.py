@@ -1,5 +1,3 @@
-# This is a Django view file that handles API requests.
-
 import os
 from groq import Groq
 
@@ -19,9 +17,6 @@ DEMO_KEYWORDS = [
     "user", "users"
 ]
 
-def is_demo_question(question: str) -> bool:
-    q = question.lower()
-    return any(word in q for word in DEMO_KEYWORDS)
 
 def get_schema():
     """
@@ -45,7 +40,6 @@ def get_schema():
     return schema
 
 
-
 def clean_sql(sql: str) -> str:
     """Remove markdown formatting from Groq output."""
     sql = sql.replace("```sql", "").replace("```", "")
@@ -63,21 +57,32 @@ def ask_ai(request):
     lowered_question = question.lower()
     is_demo = any(word in lowered_question for word in DEMO_KEYWORDS)
 
-    # 1️⃣ Get DB schema
-    schema = get_schema()
+    # 1️⃣ Get DB schema (ONLY for demo)
+    schema = get_schema() if is_demo else ""
 
-    # 2️⃣ Prompt Groq to generate SQL
+    # 2️⃣ Build SYSTEM PROMPT (THIS IS THE FIX 🔥)
+    if is_demo:
+        system_prompt = (
+            "You are an expert SQL generator for a PostgreSQL database.\n"
+            "Rules:\n"
+            "- Only return a single SELECT query.\n"
+            "- Do NOT use DELETE, UPDATE, INSERT, DROP, ALTER, TRUNCATE.\n"
+            "- Use this schema:\n"
+            f"{schema}"
+        )
+    else:
+        system_prompt = (
+            "You are an expert SQL generator.\n"
+            "Generate a generic SQL SELECT query based on the user's question.\n"
+            "Assume reasonable table and column names.\n"
+            "Do NOT use DELETE, UPDATE, INSERT, DROP, ALTER, TRUNCATE.\n"
+            "Return SQL only."
+        )
+
     sql_prompt = [
         {
             "role": "system",
-            "content": (
-                "You are an expert SQL generator for a PostgreSQL database.\n"
-                "Rules:\n"
-                "- Only return a single SELECT query.\n"
-                "- Do NOT use DELETE, UPDATE, INSERT, DROP, ALTER, TRUNCATE.\n"
-                "- Use this schema:\n"
-                f"{schema}"
-            ),
+            "content": system_prompt,
         },
         {
             "role": "user",
@@ -105,7 +110,7 @@ def ask_ai(request):
                 "sql": generated_sql,
             })
 
-    # 🔹 NON-DEMO → SQL ONLY RESPONSE
+    # 🔹 NON-DEMO → SQL ONLY (NO EXECUTION)
     if not is_demo:
         return Response({
             "mode": "sql_only",
